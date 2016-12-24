@@ -1,55 +1,104 @@
-import static java.util.stream.Collectors.toList;
+import java.util.*;
 
 public class Board {
-  private final MyBoard delegate;
-  private int hamming = -1;
-  private int manhattan = -1;
-  private Boolean isGoal;
-  private Iterable<Board> neighbors;
-  private Board twin;
-  private String stringRep;
 
+  // TODO: idea, move from 2d array to 1d array.  Makes for simpler searching
+  private final int[][] board;
 
+  // TODO: make a copy of input
   public Board(int[][] blocks) {
-    this(new MyBoard(blocks));
+    this.board = BoardUtils.cloneBoard(Objects.requireNonNull(blocks));
+    if (blocks.length != blocks[0].length) {
+      throw new IllegalArgumentException("Require an NxN board");
+    }
+
+//    validateInput(blocks);
+
   }          // construct a board from an n-by-n array of blocks
 
-  private Board(MyBoard myBoard) {
-    this.delegate = myBoard;
+  private void validateInput(int[][] blocks) {
+    TreeSet<Integer> sorted = new TreeSet<>();
+    int n = board.length;
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        sorted.add(blocks[i][j]);
+      }
+    }
+
+    if (sorted.first() != 0 || sorted.last() != (n * n) - 1) {
+      throw new IllegalArgumentException();
+    }
   }
 
   // (where blocks[i][j] = block in row i, column j)
   public int dimension() {
-    return delegate.dimension();
+    return board.length;
   }               // board dimension n
 
   // extract to utils
   public int hamming() {
-    if (this.hamming == -1) {
-      this.hamming = delegate.hamming();
+    final int n = board.length;
+    int outOfPlace = 0;
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        if (board[i][j] > 0 && board[i][j] != goalValue(j, i, n)) {
+          outOfPlace++;
+        }
+      }
     }
-    return this.hamming;
+    return outOfPlace;
   }                  // number of blocks out of place
 
+  private int goalValue(final int x, final int y, final int n) {
+    return (y * n + x + 1) % (n * n);
+  }
+
   public int manhattan() {
-    if (this.manhattan == -1) {
-      this.manhattan = delegate.manhattan();
+    int distance = 0;
+    // counter intuitively, i is y and j is x
+    int n = board.length;
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        int value = board[i][j];
+        if (value > 0) {
+          value -= 1;
+
+          int homeX = value % n;
+          int homeY = value / n;
+
+          distance += Math.abs(homeX - j);
+          distance += Math.abs(homeY - i);
+        }
+      }
     }
-    return this.manhattan;
+    return distance;
   }                // sum of Manhattan distances between blocks and goal
 
   public boolean isGoal() {
-    if (this.isGoal == null) {
-      this.isGoal = delegate.isGoal();
+    final int n = board.length;
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        if (board[i][j] != goalValue(j, i, n)) {
+          return false;
+        }
+      }
     }
-    return this.isGoal;
+    return true;
   }               // is this board the goal board?
 
+
   public Board twin() {
-    if (twin == null) {
-      this.twin = new Board(delegate.twin());
+    // TODO: remove the loops, 0 can only be so many places
+    int n = board.length;
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n - 1; j++) {
+        if (board[i][j] != 0 && board[i][j + 1] != 0) {
+          return new Board(BoardUtils.swap(board, i, j, i, j + 1));
+        }
+      }
     }
-    return this.twin;
+
+    return null;
   }                   // a board that is obtained by exchanging any pair of blocks
 
   @Override
@@ -64,21 +113,60 @@ public class Board {
       return false;
     }
     final Board that = (Board) y;
-    return this.delegate.equals(that.delegate);
+    return Arrays.deepEquals(this.board, that.board);
   }       // does this board equal y?
 
   public Iterable<Board> neighbors() {
-    if (neighbors == null) {
-      this.neighbors = delegate.neighbors().stream().map(Board::new).collect(toList());
+    /*
+    alg - find 0, generate new boards
+     */
+    int i;
+    int j = 0;
+
+    int val = -1;
+    int n = board.length;
+    for (i = 0; i < n; i++) {
+      for (j = 0; j < n; j++) {
+        val = board[i][j];
+        if (val == 0) {
+          break;
+        }
+      }
+      if (val == 0) {
+        break;
+      }
     }
+
+    List<Board> neighbors = new LinkedList<>();
+
+    if (i > 0) {
+      neighbors.add(new Board(BoardUtils.swap(board, i, j, i - 1, j)));
+    }
+    if (i < n - 1) {
+      neighbors.add(new Board(BoardUtils.swap(board, i, j, i + 1, j)));
+    }
+    if (j > 0) {
+      neighbors.add(new Board(BoardUtils.swap(board, i, j, i, j - 1)));
+    }
+    if (j < n - 1) {
+      neighbors.add(new Board(BoardUtils.swap(board, i, j, i, j + 1)));
+    }
+
     return neighbors;
   }    // all neighboring boards
 
   public String toString() {
-    if (this.stringRep == null) {
-      this.stringRep = delegate.toString();
+    StringBuilder s = new StringBuilder();
+    int n = board.length;
+    s.append(n).append("\n");
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        s.append(String.format("%2d ", board[i][j]));
+      }
+      s.append("\n");
     }
-    return this.stringRep;
+    return s.toString();
+//    return Arrays.deepToString(board);
   }               // string representation of this board (in the output format specified below)
 
 
