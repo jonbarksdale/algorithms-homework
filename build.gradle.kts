@@ -50,4 +50,3 @@ subprojects {
 
     main.java.srcDir("src/provided/java")
 }
-

@@ -1,13 +1,6 @@
-//def configureGradleScriptKotlinOn(ProjectDescriptor project) {
-//    project.buildFileName = 'build.gradle.kts'
-//    project.children.each { configureGradleScriptKotlinOn(it) }
-//}
-
-
-//configureGradleScriptKotlinOn rootProject
-
 rootProject.buildFileName = 'build.gradle.kts'
 
 include '1-perc'
 include '2-deque'
 include '3-collinear'
+include '4-puzzle'
