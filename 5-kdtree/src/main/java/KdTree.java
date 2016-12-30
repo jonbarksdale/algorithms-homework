@@ -118,10 +118,10 @@ public class KdTree {
       if (searchRect.contains(node.point)) {
         result.add(node.point);
       }
-      if (node.left.rect.intersects(searchRect)) {
+      if (node.left != null && node.left.rect.intersects(searchRect)) {
         result.addAll(range(node.left, searchRect));
       }
-      if (node.right.rect.intersects(searchRect)) {
+      if (node.right != null && node.right.rect.intersects(searchRect)) {
         result.addAll(range(node.right, searchRect));
       }
 
@@ -155,10 +155,10 @@ public class KdTree {
         }
       }
 
-      if (node.left.rect.distanceSquaredTo(searchPoint) < minDist) {
+      if (node.left != null && node.left.rect.distanceSquaredTo(searchPoint) < minDist) {
         closest = nearest(node.left, searchPoint, closest);
       }
-      if (node.right.rect.distanceSquaredTo(searchPoint) < minDist) {
+      if (node.right != null && node.right.rect.distanceSquaredTo(searchPoint) < minDist) {
         closest = nearest(node.right, searchPoint, closest);
       }
 
