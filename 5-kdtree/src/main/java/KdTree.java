@@ -2,12 +2,12 @@ import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.Color;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.Optional;
 
-/*
-
-*/
 public class KdTree {
   private Node root;
   private int size = 0;
@@ -38,6 +38,10 @@ public class KdTree {
       return new Node(point, rect);
     } else {
 
+      if (node.point.equals(point)) {
+        return node;
+      }
+
       Comparator<Point2D> comparator = useX ?
           Comparator.comparingDouble(Point2D::x) :
           Comparator.comparingDouble(Point2D::y);
@@ -52,7 +56,7 @@ public class KdTree {
           RectHV childRect = new RectHV(rect.xmin(), rect.ymin(), rect.xmax(), node.point.y());
           node.left = insert(node.left, point, !useX, childRect);
         }
-      } else if (cmp > 0) {
+      } else {
         if (useX) {
           RectHV childRect = new RectHV(node.point.x(), rect.ymin(), rect.xmax(), rect.ymax());
           node.right = insert(node.right, point, !useX, childRect);
@@ -76,6 +80,10 @@ public class KdTree {
       return Optional.empty();
     } else {
 
+      if (point.equals(node.point)) {
+        return Optional.of(node);
+      }
+
       Comparator<Point2D> comparator = useX ?
           Comparator.comparingDouble(Point2D::x) :
           Comparator.comparingDouble(Point2D::y);
@@ -84,10 +92,8 @@ public class KdTree {
 
       if (cmp < 0) {
         return get(node.left, point, !useX);
-      } else if (cmp > 0) {
-        return get(node.right, point, !useX);
       } else {
-        return Optional.of(node);
+        return get(node.right, point, !useX);
       }
     }
   }
@@ -101,7 +107,7 @@ public class KdTree {
 
   // all points that are inside the rectangle
   public Iterable<Point2D> range(RectHV rect) {
-    return range(root, rect);
+    return range(root, Objects.requireNonNull(rect));
   }
 
   private LinkedList<Point2D> range(Node node, RectHV searchRect) {
@@ -136,23 +142,23 @@ public class KdTree {
     if (node == null) {
       return closest;
     } else {
-      double nodeDist = node.point.distanceTo(searchPoint);
+      double nodeDist = node.point.distanceSquaredTo(searchPoint);
       double minDist;
       if (closest == null) {
         closest = node.point;
         minDist = nodeDist;
       } else {
-        minDist = closest.distanceTo(searchPoint);
+        minDist = closest.distanceSquaredTo(searchPoint);
         if (minDist > nodeDist) {
           closest = node.point;
           minDist = nodeDist;
         }
       }
 
-      if (node.left.rect.distanceTo(searchPoint) < minDist) {
+      if (node.left.rect.distanceSquaredTo(searchPoint) < minDist) {
         closest = nearest(node.left, searchPoint, closest);
       }
-      if (node.right.rect.distanceTo(searchPoint) < minDist){
+      if (node.right.rect.distanceSquaredTo(searchPoint) < minDist) {
         closest = nearest(node.right, searchPoint, closest);
       }
 
